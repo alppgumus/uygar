@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hediye Çarkı</title>
+</head>
+<body>
+    <div class="popup" id="popup">
+        <div class="popup-content">
+        <div class="popup-header"><button class="close-btn" id="closePopup">✖</button></div>
+        
+        <div class="wheel-container" id="wheelOfFortune"><canvas height="500" id="wheel" width="500"></canvas>
+        
+        <div id="spin">ÇEVİR</div>
+        </div>
+        
+        <div class="reward-description" id="reward-description"><span class="reward-label">Kazandığınız Ödül:</span> <span class="reward-text" id="reward-text"></span></div>
+        
+        <div class="reward-code" id="reward-code"><span class="reward-label">Hediye Kodu:</span> <span class="reward-text" id="reward-code-text"></span></div>
+        
+        <div class="countdown" id="countdown">
+        <div class="countdown-header">Geçerlilik Süresi</div>
+        
+        <div class="countdown-items">
+        <div class="countdown-item"><span class="countdown-number" id="minutes">00</span> <span class="countdown-label">Dakika</span></div>
+        <span>:</span>
+        
+        <div class="countdown-item"><span class="countdown-number" id="seconds">00</span> <span class="countdown-label">Saniye</span></div>
+        </div>
+        </div>
+        </div>
+        </div>
+        <button id="reopenPopup" style="display: none;">Hediyeyi Gör</button>
+        <style type="text/css">#wheelOfFortune {
+          display: inline-block;
+          position: relative;
+          overflow: hidden;
+          border: 3px solid;
+          border-radius: 50%;
+          box-shadow: 0px 0px 10px #869791;
+        }
+        
+        #wheel {
+          display: block;
+        }
+        
+        #spin {
+          font: 1.5em/0 sans-serif;
+          user-select: none;
+          cursor: pointer;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 30%;
+          height: 30%;
+          margin: -15%;
+          background: #fff;
+          color: #fff;
+          box-shadow: 0 0 0 8px currentColor, 0 0px 15px 5px rgba(0, 0, 0, 0.6);
+          border-radius: 50%;
+          transition: 0.8s;
+        }
+        
+        #spin::after {
+          content: "";
+          position: absolute;
+          top: -17px;
+          border: 10px solid transparent;
+          border-bottom-color: currentColor;
+          border-top: none;
+        }
+        #result {
+          margin-top: 20px;
+          font: 1.2em sans-serif;
+          text-align: center;
+          color: #333;
+        }
+        @keyframes fadeOut {
+          from {
+            opacity: 1;
+            transform: scale(1);
+          }
+          to {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+        }
+        
+        #wheelOfFortune.fade-out {
+          animation: fadeOut 0.8s forwards; /* 0.8 saniyelik fade-out animasyonu */
+        }
+        
+        /* Popup container */
+        .popup {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        
+        .popup-content {
+          position: relative; /* Kapatma ikonunu içeride hizalamak için gerekli */
+          background: #fff;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+          text-align: center;
+          width: 660px;
+        }
+        
+        .popup-header {
+          position: absolute;
+          top: 0;
+          right: 10px;
+        }
+        
+        .close-btn {
+          background: none;
+          border: none;
+          font-size: 1.5em;
+          color: #333;
+          cursor: pointer;
+        }
+        
+        .close-btn:hover {
+          color: #f00;
+        }
+        
+        .wheel-container {
+          text-align: center;
+        }
+        
+        .reward-description {
+          margin-top: 20px;
+          font-size: 1.2em;
+          color: #333;
+          text-align: center;
+          display: none; /* Başlangıçta gizli */
+        }
+        
+        .reward-code {
+          margin-top: 10px;
+          padding: 10px 20px;
+          background: #fff;
+          border: 2px dashed #869791;
+          border-radius: 10px;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+          font-size: 1.2em;
+          color: #333;
+          text-align: center;
+          font-weight: bold;
+          display: none; /* Başlangıçta gizli */
+        }
+        
+        @keyframes fadeOut {
+          from {
+            opacity: 1;
+            transform: scale(1);
+          }
+          to {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+        }
+        
+        #wheelOfFortune.fade-out {
+          animation: fadeOut 0.8s forwards;
+        }
+        
+        .countdown {
+          margin-top: 20px;
+          display: flex;
+          flex-direction: column; /* Dikey hizalama */
+          align-items: center; /* Ortadan hizalama */
+        }
+        
+        .countdown-header {
+          font-size: 1.2em;
+          font-weight: bold;
+          color: #333;
+          text-align: center;
+          margin-bottom: 10px;
+          text-transform: uppercase;
+        }
+        
+        .countdown-items {
+          display: flex;
+          align-items: center;
+          gap: 5px; /* Araya boşluk */
+        }
+        
+        .countdown-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        
+        .countdown-number {
+          font-size: 2.5em;
+          font-weight: bold;
+          color: #333;
+          background: #f0f0f0;
+          border-radius: 5px;
+          padding: 10px;
+          min-width: 60px;
+          text-align: center;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .countdown-label {
+          margin-top: 5px;
+          font-size: 0.8em;
+          color: red;
+          text-transform: uppercase;
+          font-weight: bold;
+        }
+        
+        .reward-description,
+        .reward-code {
+          margin-top: 20px;
+          font-size: 1.2em;
+          color: #333;
+          text-align: left;
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+        }
+        
+        .reward-label {
+          font-weight: normal; /* Bold yapılacak kısım */
+          text-transform: capitalize;
+        }
+        
+        .reward-text strong {
+          font-weight: bold !important; /* Normal yapılacak kısım */
+        }
+        
+        .reward-description,
+        .reward-code,
+        #countdown {
+          display: none; /* Başlangıçta gizli */
+        }
+        
+        @media screen and (max-width: 768px) {
+          #spin {
+            font-size: 1.2em;
+            width: 35%;
+            height: 35%;
+            margin: -17.5%;
+          }
+        
+          #wheelOfFortune {
+            width: 90%;
+            height: auto;
+          }
+        
+          #wheel {
+            width: 100%;
+            height: auto;
+          }
+        
+          .popup-content {
+            padding: 15px;
+          }
+        
+          .reward-description,
+          .reward-code {
+            font-size: 1em;
+          }
+        
+          .countdown-number {
+            font-size: 1.5em;
+            padding: 5px;
+          }
+        
+          .countdown-label {
+            font-size: 0.7em;
+          }
+        }
+        
+        @media screen and (max-width: 480px) {
+          #spin {
+            font-size: 1em;
+            width: 40%;
+            height: 40%;
+            margin: -20%;
+          }
+        
+          .reward-description,
+          .reward-code {
+            font-size: 0.9em;
+          }
+        
+          .countdown-number {
+            font-size: 1.2em;
+            padding: 5px;
+          }
+        
+          .countdown-label {
+            font-size: 0.6em;
+          }
+        }
+        
+        #reopenPopup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 10px;
+            transform: translateY(-50%);
+            background: #869791;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        
+        #reopenPopup:hover {
+          background: #53605c; /* Hover için biraz daha açık mavi renk */
+        }
+        </style>
+        <script>
+        const sectors = [
+          { color: "#f82", label: "%5 İndirim", explanation:"", probability: 0.6, code: "İNDİRİM5" },
+          { color: "#0bf", label: "%10 İndirim", explanation:"", probability: 0.3, code: "İNDİRİM10" },
+          { color: "#fb0", label: "Ücretsiz Kargo", explanation:"", probability: 0.09, code: "KARGO" },
+          { color: "#0fb", label: "%25 İndirim", explanation:"", probability: 0.0, code: "İNDİRİM25" },
+          { color: "#b0f", label: "400₺ Hediye", explanation:"3.500 TL ve Üzeri Alışverişlerde Geçerlidir!", probability: 0.0001, code: "HEDİYE400" },
+          { color: "#f0b", label: "%15 İndirim", explanation:"", probability: 0.0001, code: "İNDİRİM15" }
+        ];
+        
+        const rand = (m, M) => Math.random() * (M - m) + m;
+        const tot = sectors.length;
+        const spinEl = document.querySelector("#spin");
+        const ctx = document.querySelector("#wheel").getContext("2d");
+        const wheelEl = document.querySelector("#wheelOfFortune");
+        const rewardDescriptionEl = document.querySelector("#reward-description");
+        const rewardCodeEl = document.querySelector("#reward-code");
+        const countdownEl = document.querySelector("#countdown");
+        const popupEl = document.querySelector("#popup");
+        const closePopupEl = document.querySelector("#closePopup");
+        const reopenPopupEl = document.getElementById("reopenPopup");
+        const dia = ctx.canvas.width;
+        const rad = dia / 2;
+        const PI = Math.PI;
+        const TAU = 2 * PI;
+        const arc = TAU / sectors.length;
+        
+        const friction = 0.991;
+        let angVel = 0;
+        let ang = 0;
+        let isSpinning = false;
+        
+        const getIndex = () => Math.floor(tot - (ang / TAU) * tot) % tot;
+        
+        // Cookie ayarlama fonksiyonu
+        function setCookie(name, value, hours) {
+          const date = new Date();
+          date.setTime(date.getTime() + hours * 60 * 60 * 1000);
+          const expires = `expires=${date.toUTCString()}`;
+          document.cookie = `${name}=${value};${expires};path=/`;
+        }
+        
+        // Cookie okuma fonksiyonu
+        function getCookie(name) {
+          const decodedCookie = decodeURIComponent(document.cookie);
+          const cookies = decodedCookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            let cookie = cookies[i].trim();
+            if (cookie.indexOf(name + "=") === 0) {
+              return cookie.substring(name.length + 1);
+            }
+          }
+          return null;
+        }
+        
+        // Şans çarkını çevirme izni kontrolü
+        function hasSpinAccess() {
+          const lastSpin = getCookie("lastSpin");
+          if (!lastSpin) return true;
+        
+          const now = new Date();
+          const lastSpinDate = new Date(lastSpin);
+          const diffHours = (now - lastSpinDate) / (1000 * 60 * 60);
+          return diffHours >= 12;
+        }
+        
+        function disableSpin() {
+          spinEl.textContent = "Şansını Dene (12 saat sonra)";
+          spinEl.style.cursor = "not-allowed";
+          spinEl.removeEventListener("click", spinHandler);
+        }
+        
+        function enableSpin() {
+          spinEl.textContent = "ÇEVİR";
+          spinEl.style.cursor = "pointer";
+          spinEl.addEventListener("click", spinHandler);
+        }
+        
+        // Weighted random selection based on probabilities
+        function selectWinner() {
+          const totalWeight = sectors.reduce((sum, sector) => sum + sector.probability, 0);
+          const random = Math.random() * totalWeight;
+          let cumulative = 0;
+        
+          for (const sector of sectors) {
+            if (sector.probability === 0) continue;
+            cumulative += sector.probability;
+            if (random <= cumulative) {
+              return sector;
+            }
+          }
+        
+          return sectors[sectors.length - 1];
+        }
+        
+        // Draw each sector of the wheel
+        function drawSector(sector, i) {
+          const ang = arc * i;
+          ctx.save();
+          ctx.beginPath();
+          ctx.fillStyle = sector.color;
+          ctx.moveTo(rad, rad);
+          ctx.arc(rad, rad, rad, ang, ang + arc);
+          ctx.lineTo(rad, rad);
+          ctx.fill();
+        
+          ctx.translate(rad, rad);
+          ctx.rotate(ang + arc / 2);
+          ctx.textAlign = "right";
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold 20px sans-serif";
+          ctx.fillText(sector.label, rad - 10, 10);
+          ctx.restore();
+        }
+        
+        // Start countdown (30 minutes)
+        function startCountdown() {
+          // Hedef tarihi çerezden kontrol et
+          let targetDate = getCookie("targetDate");
+        
+          // Hedef tarih yoksa 30 dakika sonrası için yeni bir tarih oluştur
+          if (!targetDate) {
+            targetDate = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+            setCookie("targetDate", targetDate, 30); // Yeni hedef tarihi çereze yaz
+          } else {
+            targetDate = new Date(targetDate);
+          }
+        
+          updateCountdownDisplay(targetDate); // Ekranı hemen güncelle
+          countdownEl.style.display = "flex";
+        
+          const interval = setInterval(() => {
+            const now = new Date();
+            const difference = targetDate - now;
+        
+            if (difference <= 0) {
+              clearInterval(interval);
+              document.getElementById("minutes").textContent = "00";
+              document.getElementById("seconds").textContent = "00";
+              reopenPopupEl.style.display = "none"; // Süre dolunca butonu gizle
+              return;
+            }
+        
+            updateCountdownDisplay(targetDate); // Ekranı sürekli güncelle
+          }, 1000);
+        }
+        
+        
+        // Function to update the countdown display
+        function updateCountdownDisplay(targetDate) {
+          const now = new Date();
+          const difference = targetDate - now;
+        
+          const minutes = Math.floor(difference / (1000 * 60));
+          const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        
+          document.getElementById("minutes").textContent = minutes.toString().padStart(2, "0");
+          document.getElementById("seconds").textContent = seconds.toString().padStart(2, "0");
+        }
+        
+        // Show reward and make reopen button visible
+        function showReward(winner) {
+          const rewardDescriptionEl = document.getElementById("reward-text");
+          const rewardCodeEl = document.getElementById("reward-code-text");
+        
+          rewardDescriptionEl.innerHTML = `<strong>${winner.label} ${winner.explanation}</strong>`;
+          rewardCodeEl.innerHTML = `<strong>${winner.code}</strong>`;
+        
+          document.querySelector(".reward-description").style.display = "flex";
+          document.querySelector(".reward-code").style.display = "flex";
+        
+          // Set cookie with reward information
+          setCookie("reward", JSON.stringify({ label: winner.label, code: winner.code, explanation: winner.explanation }),  12); // 12 saat geçerli olacak şekilde cookie ayarla
+          setCookie("lastSpin", new Date().toISOString(), 12); // Son çevirme zamanını cookie'ye kaydet
+        
+          startCountdown(); // Geri sayımı başlat
+          showReopenButton(); // Yeniden aç butonunu göster
+        }
+        
+        // Show the reopen button
+        function showReopenButton() {
+          reopenPopupEl.style.display = "block";
+        
+          setTimeout(() => {
+            reopenPopupEl.style.display = "none"; // Hide the button after 30 minutes
+          }, 30 * 60 * 1000);
+        }
+        
+        // Rotate the wheel and show reward
+        function rotate() {
+          const sector = sectors[getIndex()];
+          ctx.canvas.style.transform = `rotate(${ang - PI / 2}rad)`;
+          spinEl.textContent = !angVel ? "ÇEVİR" : sector.label;
+          spinEl.style.background = sector.color;
+        
+          if (!angVel && isSpinning) {
+            isSpinning = false;
+            const winner = sectors[getIndex()];
+            showReward(winner);
+        
+            setTimeout(() => {
+              wheelEl.classList.add("fade-out");
+              setTimeout(() => {
+                wheelEl.style.display = "none";
+              }, 800);
+            }, 1000);
+          }
+        }
+        
+        function frame() {
+          if (!angVel) return;
+          angVel *= friction;
+          if (angVel < 0.002) angVel = 0;
+          ang += angVel;
+          ang %= TAU;
+          rotate();
+        }
+        
+        function engine() {
+          frame();
+          requestAnimationFrame(engine);
+        }
+        
+        // Şans çarkını çevirme işlemi
+        function spinHandler() {
+          if (!hasSpinAccess()) {
+            alert("Şans çarkını yalnızca 12 saatte bir kez çevirebilirsiniz.");
+            return;
+          }
+        
+          if (!angVel && !isSpinning) {
+            isSpinning = true;
+            const winner = selectWinner();
+            const winnerIndex = sectors.findIndex(sector => sector.label === winner.label);
+            const targetAngle = (tot - winnerIndex) * arc + rand(-arc / 4, arc / 4);
+            angVel = rand(0.25, 0.45);
+            ang = TAU - targetAngle;
+        
+            // Çevirme iznini kapat ve cookie ayarla
+            setCookie("lastSpin", new Date().toISOString(), 12);
+            disableSpin();
+          }
+        }
+        
+        // Initialize the wheel
+        function init() {
+          sectors.forEach(drawSector);
+          rotate();
+          rewardDescriptionEl.style.display = "none";
+          rewardCodeEl.style.display = "none";
+          countdownEl.style.display = "none";
+          engine();
+        
+          spinEl.addEventListener("click", spinHandler);
+        
+          closePopupEl.addEventListener("click", (event) => {
+            event.preventDefault();
+            popupEl.style.display = "none";
+          });
+        
+          reopenPopupEl.addEventListener("click", () => {
+            event.preventDefault();
+            popupEl.style.display = "flex";
+          });
+        
+          // Check for existing reward cookie
+          const rewardCookie = getCookie("reward");
+          if (rewardCookie) {
+            const reward = JSON.parse(rewardCookie);
+            rewardDescriptionEl.innerHTML = `Kazandığınız Ödül: <strong>${reward.label} ${reward.explanation}</strong>`;
+            rewardCodeEl.innerHTML = `Hediye Kodu: <strong>${reward.code}</strong>`;
+            document.querySelector(".reward-description").style.display = "flex";
+            document.querySelector(".reward-code").style.display = "flex";
+        
+            // Hide the wheel if a reward has been won
+            wheelEl.style.display = "none"; // Hide the wheel
+            reopenPopupEl.style.display = "block";
+        
+            // Check for target date cookie and update countdown
+            const targetDateCookie = getCookie("targetDate");
+            if (targetDateCookie) {
+              const targetDate = new Date(targetDateCookie);
+              const now = new Date();
+              const difference = targetDate - now;
+        
+              if (difference > 0) {
+                // If there's still time left, start the countdown
+                updateCountdownDisplay(targetDate); // Update display immediately
+                startCountdown(); // Start the countdown
+              } else {
+                // If time is up, reset the countdown display
+                document.getElementById("minutes").textContent = "00";
+                document.getElementById("seconds").textContent = "00";
+                reopenPopupEl.style.display = "none"; // Hide the button after 30 minutes
+              }
+            }
+          }
+        
+          // Check if the user can spin again
+          if (!hasSpinAccess()) {
+            disableSpin();
+          } else {
+            enableSpin();
+          }
+        }
+        
+        
+        init();
+        
+        </script>
